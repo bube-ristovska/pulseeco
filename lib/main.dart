@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'city.dart';
-import 'onboarding.dart'; // Import the city list screen
+import 'onboarding.dart';
+import 'homescreen.dart';
+import 'mapscreen.dart';
+import 'learnscreen.dart';
+import 'rankingscreen.dart';
+import 'settingsscreen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,10 +36,8 @@ class AirQualityScreen extends StatefulWidget {
 }
 
 class _AirQualityScreenState extends State<AirQualityScreen> {
-  // Track the selected index of the bottom navigation bar
   int _selectedIndex = 0;
 
-  // List of screens to navigate to
   final List<Widget> _screens = [
     const HomeScreen(),
     const MapScreen(),
@@ -44,7 +46,6 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
     const SettingsScreen(),
   ];
 
-  // When an item is tapped, update the selected index
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -54,27 +55,14 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Current City"),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CityListScreen()),
-              );
-            },
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: _screens[_selectedIndex],  // Display the selected screen
+      body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,  // Highlight the selected index
-        onTap: _onItemTapped,  // Handle item tap
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed, // Add this line to show all items
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
@@ -83,62 +71,6 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
-    );
-  }
-}
-
-// Dummy screens for each navigation item
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Home Screen'),
-    );
-  }
-}
-
-class MapScreen extends StatelessWidget {
-  const MapScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Map Screen'),
-    );
-  }
-}
-
-class LearnScreen extends StatelessWidget {
-  const LearnScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Learn Screen'),
-    );
-  }
-}
-
-class RankingScreen extends StatelessWidget {
-  const RankingScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Ranking Screen'),
-    );
-  }
-}
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Settings Screen'),
     );
   }
 }
