@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'city.dart'; // Import the city list screen
+import 'city.dart';
+import 'onboarding.dart'; // Import the city list screen
 
 void main() {
   runApp(const MyApp());
@@ -11,11 +12,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Air Quality App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const AirQualityScreen(),
+      debugShowCheckedModeBanner: false,
+      title: 'Onboarding Demo',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => OnboardingScreen(),
+        '/home': (context) => AirQualityScreen(),
+      },
     );
   }
 }
