@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
+import 'homescreen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -12,6 +16,19 @@ class _MapScreenState extends State<MapScreen> {
   bool showBottomSheet = false;
   String selectedSensor = '';
   double bottomSheetHeight = 0;
+  late final MapController mapController;
+
+  @override
+  void initState() {
+    super.initState();
+    mapController = MapController();
+  }
+
+  final List<LatLng> sensorLocations = [
+    LatLng(41.9981, 21.4254),
+    LatLng(41.9921, 21.4234),
+    LatLng(41.9923, 21.4221),
+  ];
 
   final List<String> particles = ['PM10', 'PM20', 'NOISE', 'TEMP', 'HUMID'];
   final List<String> weekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -28,14 +45,19 @@ class _MapScreenState extends State<MapScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top navigation bar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen()),
+                          );
+                        },
                       ),
+
                       IconButton(
                         icon: const Icon(Icons.language),
                         onPressed: () {
@@ -45,8 +67,6 @@ class _MapScreenState extends State<MapScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Particle type selector
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -61,10 +81,7 @@ class _MapScreenState extends State<MapScreen> {
                               });
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 color: isSelected ? Colors.indigo : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(20),
@@ -83,8 +100,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Date and values row
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -122,71 +137,93 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Map container with controls
                   Expanded(
-                    child: Stack(
-                      children: [
-                        // Map placeholder
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Stack(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        children: [
+                          FlutterMap(
+                            mapController: mapController,
+                            options: MapOptions(
+                              center: LatLng(41.9981, 21.4254),
+                              zoom: 13.0,
+                              interactiveFlags: InteractiveFlag.all,
+                            ),
                             children: [
-                              // Map pins
-                              ...List.generate(3, (index) {
-                                return Positioned(
-                                  left: 50.0 + (index * 100),
-                                  top: 100.0 + (index * 50),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectedSensor = 'Sensor ${index + 1}';
-                                        showBottomSheet = true;
-                                        bottomSheetHeight = 200;
-                                      });
-                                    },
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.indigo,
-                                      size: 36,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        ),
-                        // Map controls
-                        Positioned(
-                          top: 16,
-                          right: 16,
-                          child: Column(
-                            children: [
-                              FloatingActionButton(
-                                mini: true,
-                                onPressed: () {},
-                                child: const Icon(Icons.add),
+                              TileLayer(
+                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.example.app',
                               ),
-                              const SizedBox(height: 8),
-                              FloatingActionButton(
-                                mini: true,
-                                onPressed: () {},
-                                child: const Icon(Icons.layers),
+                              MarkerLayer(
+                                markers: List.generate(
+                                  sensorLocations.length,
+                                      (index) => Marker(
+                                        point: sensorLocations[index],
+                                        width: 36,
+                                        height: 36,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              selectedSensor = 'Sensor ${index + 1}';
+                                              showBottomSheet = true;
+                                              bottomSheetHeight = 200;
+                                            });
+                                          },
+                                          child: const Icon(
+                                            Icons.location_on,
+                                            color: Colors.indigo,
+                                            size: 36,
+                                          ),
+                                        ),
+                                      ),
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            top: 16,
+                            right: 16,
+                            child: Column(
+                              children: [
+                                FloatingActionButton(
+                                  mini: true,
+                                  heroTag: 'zoom_in',
+                                  onPressed: () {
+                                    final currentZoom = mapController.zoom;
+                                    if (currentZoom < 18) {
+                                      mapController.move(
+                                        mapController.center,
+                                        currentZoom + 1,
+                                      );
+                                    }
+                                  },
+                                  child: const Icon(Icons.add),
+                                ),
+                                const SizedBox(height: 8),
+                                FloatingActionButton(
+                                  mini: true,
+                                  heroTag: 'zoom_out',
+                                  onPressed: () {
+                                    final currentZoom = mapController.zoom;
+                                    if (currentZoom > 0) {
+                                      mapController.move(
+                                        mapController.center,
+                                        currentZoom - 1,
+                                      );
+                                    }
+                                  },
+                                  child: const Icon(Icons.remove),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Sliding bottom sheet
             if (showBottomSheet)
               Positioned(
                 bottom: 0,
@@ -196,8 +233,7 @@ class _MapScreenState extends State<MapScreen> {
                   onVerticalDragUpdate: (details) {
                     setState(() {
                       bottomSheetHeight -= details.delta.dy;
-                      if (bottomSheetHeight < 0) bottomSheetHeight = 0;
-                      if (bottomSheetHeight > 300) bottomSheetHeight = 300;
+                      bottomSheetHeight = bottomSheetHeight.clamp(0.0, 300.0);
                       if (bottomSheetHeight < 50) showBottomSheet = false;
                     });
                   },
@@ -237,7 +273,7 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          '${selectedParticle}: ${values[0]} μg/m³',
+                          '$selectedParticle: ${values[0]} μg/m³',
                           style: const TextStyle(
                             fontSize: 16,
                           ),
@@ -251,5 +287,11 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    mapController.dispose();
+    super.dispose();
   }
 }

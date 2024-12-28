@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'mapscreen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -112,48 +115,147 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Map Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Map',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+          // Map Card with Preview
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MapScreen()),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Map',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.visibility,
+                              size: 16,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'View Full Map',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.map,
-                      size: 48,
-                      color: Colors.grey,
+                    child: SizedBox(
+                      height: 200,
+                      width: double.infinity,
+                      child: Stack(
+                        children: [
+                          FlutterMap(
+                            options: const MapOptions(
+                              center: LatLng(41.9981, 21.4254), // Coordinates for Skopje
+                              zoom: 12.0,
+                              interactiveFlags: InteractiveFlag.none,
+                            ),
+                            nonRotatedChildren: [
+                              TileLayer(
+                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.example.app',
+                              ),
+                              const MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: LatLng(41.9981, 21.4254),
+                                    width: 36,
+                                    height: 36,
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: Colors.red,
+                                      size: 36,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ], children: [],
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.3),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          const Positioned(
+                            left: 12,
+                            bottom: 12,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Skopje, North Macedonia',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
