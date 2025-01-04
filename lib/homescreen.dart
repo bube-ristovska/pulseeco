@@ -9,10 +9,11 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(top: 40.0, left: 16.0, right: 16.0, bottom: 16.0), // Top padding set to 40 and others to 16
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
           // Header with Add City button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -32,20 +33,20 @@ class HomeScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  side: const BorderSide(color: Colors.blue),
+                  side: const BorderSide(color: Color(0xFF1A237E)),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Add City',
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(color: Color(0xFF1A237E)),
                     ),
                     SizedBox(width: 4),
                     Icon(
                       Icons.add,
                       size: 20,
-                      color: Colors.blue,
+                      color: Color(0xFF1A237E),
                     ),
                   ],
                 ),
@@ -165,13 +166,13 @@ class HomeScreen extends StatelessWidget {
                             Icon(
                               Icons.visibility,
                               size: 16,
-                              color: Colors.blue,
+                              color: Color(0xFF1A237E),
                             ),
                             SizedBox(width: 4),
                             Text(
                               'View Full Map',
                               style: TextStyle(
-                                color: Colors.blue,
+                                color: Color(0xFF1A237E),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
