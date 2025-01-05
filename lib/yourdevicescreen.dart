@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class YourDeviceScreen extends StatefulWidget {
   const YourDeviceScreen({Key? key}) : super(key: key);
@@ -10,13 +11,18 @@ class YourDeviceScreen extends StatefulWidget {
 class YourDeviceScreenState extends State<YourDeviceScreen> {
   final List<bool> _checkedItems = List.generate(9, (_) => false);
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  Future<void> _launchUrl(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not launch $urlString'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildChecklistItem(int index, String text, {String? url}) {
@@ -36,7 +42,7 @@ class YourDeviceScreenState extends State<YourDeviceScreen> {
           Expanded(
             child: url != null
                 ? GestureDetector(
-              onTap: () => _showSnackBar('Opening $url'),
+              onTap: () => _launchUrl(url),
               child: Text(
                 text,
                 style: const TextStyle(

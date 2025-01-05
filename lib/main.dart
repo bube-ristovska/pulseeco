@@ -59,7 +59,7 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.blue,
+        selectedItemColor:  const Color(0xFF1A237E),
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed, // Add this line to show all items
