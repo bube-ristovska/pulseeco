@@ -168,24 +168,24 @@ class _MapScreenState extends State<MapScreen> {
                                 markers: List.generate(
                                   sensorLocations.length,
                                       (index) => Marker(
-                                        point: sensorLocations[index],
-                                        width: 36,
-                                        height: 36,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              selectedSensor = 'Sensor ${index + 1}';
-                                              showBottomSheet = true;
-                                              bottomSheetHeight = 200;
-                                            });
-                                          },
-                                          child: const Icon(
-                                            Icons.location_on,
-                                            color: Colors.indigo,
-                                            size: 36,
-                                          ),
-                                        ),
+                                    point: sensorLocations[index],
+                                    width: 36,
+                                    height: 36,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          selectedSensor = 'Sensor ${index + 1}';
+                                          showBottomSheet = true;
+                                          bottomSheetHeight = 200;
+                                        });
+                                      },
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.indigo,
+                                        size: 36,
                                       ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
