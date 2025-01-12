@@ -34,6 +34,7 @@ dependencies:
   latlong2: ^0.9.0
   permission_handler: ^10.2.0
   http: ^1.1.0
+  intl: ^0.18.0
 
 
 
@@ -63,6 +64,7 @@ flutter:
   - assets/images/welcome_map.png
   - assets/images/notifications.png
   - assets/images/location.png
+  - assets/images/city.jpg
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

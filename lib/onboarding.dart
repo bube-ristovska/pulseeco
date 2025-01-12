@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'cities.dart';
 
-// OnboardingScreen widget that manages the state and navigation of the onboarding process
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
 
@@ -9,31 +9,30 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  // Controller for managing page transitions
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  City? selectedCity;
 
-  // List of screen data for easy maintenance and scalability
   final List<OnboardingScreenData> screens = [
     OnboardingScreenData(
       title: 'Co-create the future of your city!',
-      description: 'Join us in the effort to empower actions towards sustainable environmental development. Get informed and participate in gathering, analysis and visualization of environmental data to contribute for a better tomorrow.',
+      description: 'Join us in the effort to empower actions towards sustainable environmental development.',
       imagePath: 'assets/images/welcome_map.png',
       primaryButtonText: 'CONTINUE',
       showSecondaryButton: false,
     ),
     OnboardingScreenData(
-      title: 'Turn on notifications',
-      description: 'Enable notifications to receive timely alerts about air quality changes in your area. You\'ll be notified about high pollution levels, health recommendations, and updates from local air monitoring stations.',
-      imagePath: 'assets/images/notifications.png',
-      primaryButtonText: 'TURN ON',
-      secondaryButtonText: 'NO, THANKS',
-      showSecondaryButton: true,
+      title: 'Choose Your Main City',
+      description: 'Select your primary city to monitor air quality and environmental data.',
+      imagePath: 'assets/images/city.jpg',
+      primaryButtonText: 'CHOOSE CITY',
+      showSecondaryButton: false,
+      isChooseCity: true,
     ),
     OnboardingScreenData(
-      title: 'Turn on location',
-      description: 'Allow location access to see real-time air pollution levels and alerts for your area. We only use your location to provide accurate, location-based information to keep you safe and informed.',
-      imagePath: 'assets/images/location.png',
+      title: 'Turn on notifications',
+      description: 'Enable notifications to receive timely alerts about air quality changes in your area.',
+      imagePath: 'assets/images/notifications.png',
       primaryButtonText: 'TURN ON',
       secondaryButtonText: 'NO, THANKS',
       showSecondaryButton: true,
@@ -46,35 +45,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  // Handle primary button actions based on current page
   void _handlePrimaryButtonTap() async {
-    switch (_currentPage) {
-      case 0:
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
+    if (_currentPage == 1 && selectedCity == null) {
+      // Show city selection dialog if no city is selected
+      _showCitySelectionDialog();
+      return;
+    }
+
+    if (_currentPage < screens.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // Navigate to home screen with selected city
+      if (mounted && selectedCity != null) {
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+          arguments: selectedCity,
         );
-        break;
-      case 1:
-      // TODO: Implement notification permission request
-        await _requestNotificationPermission();
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-        break;
-      case 2:
-      // TODO: Implement location permission request
-        await _requestLocationPermission();
-        // Navigate to main app screen after completing onboarding
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-        break;
+      }
     }
   }
 
-  // Handle secondary button actions
   void _handleSecondaryButtonTap() {
     if (_currentPage < screens.length - 1) {
       _pageController.nextPage(
@@ -82,24 +76,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, '/home', arguments: selectedCity);
     }
   }
 
-  // Placeholder for notification permission request
-  Future<void> _requestNotificationPermission() async {
-    // Implement platform-specific notification permission request
-  }
+  Future<void> _showCitySelectionDialog() async {
+    final City? result = await showDialog<City>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose Your Main City'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: cities.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(cities[index].name),
+                  subtitle: Text(cities[index].country),
+                  onTap: () {
+                    Navigator.pop(context, cities[index]);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
 
-  // Placeholder for location permission request
-  Future<void> _requestLocationPermission() async {
-    // Implement platform-specific location permission request
+    if (result != null) {
+      setState(() {
+        selectedCity = result;
+        _handlePrimaryButtonTap(); // Proceed to next page after selection
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF322E99), // Deep purple background
+      backgroundColor: const Color(0xFF322E99),
       body: Stack(
         children: [
           PageView.builder(
@@ -115,10 +133,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 data: screens[index],
                 onPrimaryButtonTap: _handlePrimaryButtonTap,
                 onSecondaryButtonTap: _handleSecondaryButtonTap,
+                selectedCity: selectedCity,
               );
             },
           ),
-          // Page indicator dots
           Positioned(
             bottom: 100,
             left: 0,
@@ -145,7 +163,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// Data class for organizing screen content
 class OnboardingScreenData {
   final String title;
   final String description;
@@ -153,6 +170,7 @@ class OnboardingScreenData {
   final String primaryButtonText;
   final String? secondaryButtonText;
   final bool showSecondaryButton;
+  final bool isChooseCity;
 
   OnboardingScreenData({
     required this.title,
@@ -161,20 +179,22 @@ class OnboardingScreenData {
     required this.primaryButtonText,
     this.secondaryButtonText,
     this.showSecondaryButton = false,
+    this.isChooseCity = false,
   });
 }
 
-// Individual onboarding page widget
 class OnboardingPage extends StatelessWidget {
   final OnboardingScreenData data;
   final VoidCallback onPrimaryButtonTap;
   final VoidCallback onSecondaryButtonTap;
+  final City? selectedCity;
 
   const OnboardingPage({
     Key? key,
     required this.data,
     required this.onPrimaryButtonTap,
     required this.onSecondaryButtonTap,
+    this.selectedCity,
   }) : super(key: key);
 
   @override
@@ -212,6 +232,18 @@ class OnboardingPage extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                if (data.isChooseCity && selectedCity != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'Selected City: ${selectedCity!.name}, ${selectedCity!.country}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
             ),
           ),
