@@ -33,7 +33,8 @@ dependencies:
   flutter_map: ^6.0.0
   latlong2: ^0.9.0
   permission_handler: ^10.2.0
-
+  http: ^1.1.0
+  intl: ^0.18.0
 
 
 
@@ -42,6 +43,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   url_launcher: ^6.3.1
+  shared_preferences: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +65,7 @@ flutter:
   - assets/images/welcome_map.png
   - assets/images/notifications.png
   - assets/images/location.png
+  - assets/images/city.jpg
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-
-import 'main.dart';
+import 'package:intl/intl.dart';
+import 'apicalls.dart';
+import 'cities.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -12,11 +13,17 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  String selectedParticle = 'PM10';
+  String selectedParticle = 'pm10';
   bool showBottomSheet = false;
   String selectedSensor = '';
   double bottomSheetHeight = 0;
   late final MapController mapController;
+  List<City> selectedCities = [];
+  City? selectedCity;
+  List<Sensor> sensors = [];
+  List<SensorData> currentData = [];
+  Map<String, double> weeklyData = {};
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -24,15 +31,54 @@ class _MapScreenState extends State<MapScreen> {
     mapController = MapController();
   }
 
-  final List<LatLng> sensorLocations = [
-    LatLng(41.9981, 21.4254),
-    LatLng(41.9921, 21.4234),
-    LatLng(41.9923, 21.4221),
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final List<City>? cities = ModalRoute.of(context)?.settings.arguments as List<City>?;
+    if (cities != null && selectedCities.isEmpty) {
+      selectedCities = cities;
+      selectedCity = cities.first;
+      loadData();
+    }
+  }
 
-  final List<String> particles = ['PM10', 'PM20', 'NOISE', 'TEMP', 'HUMID'];
-  final List<String> weekDays = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-  final List<String> values = ['45', '52', '48', '50', '47', '46', '49'];
+  Future<void> loadData() async {
+    if (selectedCity == null) return;
+
+    setState(() => isLoading = true);
+    try {
+      final sensorsData = await ApiService.getSensors(selectedCity!);
+      final currentSensorData = await ApiService.getCurrentData(selectedCity!);
+      final weeklyDataResult = await ApiService.getWeeklyData(selectedCity!, selectedParticle);
+
+      if (!mounted) return;  // Avoid calling setState if the widget is disposed
+
+      setState(() {
+        sensors = sensorsData;
+        currentData = currentSensorData;
+        weeklyData = weeklyDataResult;
+        isLoading = false;
+      });
+
+      if (sensors.isNotEmpty) {
+        final firstSensor = sensors[0];
+        final position = firstSensor.position.split(',');
+        if (!mounted) return;  // Avoid mapController move if widget is disposed
+
+        mapController.move(
+          LatLng(double.parse(position[0]), double.parse(position[1])),
+          13.0,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;  // Avoid calling setState if the widget is disposed
+
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading data: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,24 +96,27 @@ class _MapScreenState extends State<MapScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back),
-                        onPressed: () {
-                          // Check if there's a screen to pop
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context); // Go back to the previous screen
-                          } else {
-                            // If no previous screen, go to MainScreen
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>  AirQualityScreen(), // Navigate to MainScreen
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
-
-
-
+                      // City Selection Dropdown
+                      if (selectedCities.isNotEmpty)
+                        DropdownButton<City>(
+                          value: selectedCity,
+                          items: selectedCities.map((city) {
+                            return DropdownMenuItem(
+                              value: city,
+                              child: Text(city.name),
+                            );
+                          }).toList(),
+                          onChanged: (City? newCity) {
+                            if (newCity != null) {
+                              setState(() {
+                                selectedCity = newCity;
+                              });
+                              loadData();
+                            }
+                          },
+                        ),
                       IconButton(
                         icon: const Icon(Icons.language),
                         onPressed: () {
@@ -80,7 +129,7 @@ class _MapScreenState extends State<MapScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: particles.map((particle) {
+                      children: ['pm10', 'pm25', 'no2', 'o3', 'co'].map((particle) {
                         bool isSelected = selectedParticle == particle;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
@@ -89,6 +138,7 @@ class _MapScreenState extends State<MapScreen> {
                               setState(() {
                                 selectedParticle = particle;
                               });
+                              loadData();
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -97,7 +147,7 @@ class _MapScreenState extends State<MapScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                particle,
+                                particle.toUpperCase(),
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : Colors.black,
                                   fontWeight: FontWeight.bold,
@@ -110,86 +160,93 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: List.generate(7, (index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  weekDays[index],
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                  if (weeklyData.isNotEmpty)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: weeklyData.entries.map((entry) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 16.0),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[300],
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                values[index],
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
+                                const SizedBox(height: 4),
+                                Text(
+                                  entry.value.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 24),
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Stack(
                         children: [
-                          FlutterMap(
-                            mapController: mapController,
-                            options: MapOptions(
-                              center: LatLng(41.9981, 21.4254),
-                              zoom: 13.0,
-                              interactiveFlags: InteractiveFlag.all,
-                            ),
-                            children: [
-                              TileLayer(
-                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.example.app',
+                          if (isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else
+                            FlutterMap(
+                              mapController: mapController,
+                              options: MapOptions(
+                                center: selectedCity?.coordinates ?? const LatLng(41.9981, 21.4254),
+                                zoom: 13.0,
+                                interactiveFlags: InteractiveFlag.all,
                               ),
-                              MarkerLayer(
-                                markers: List.generate(
-                                  sensorLocations.length,
-                                      (index) => Marker(
-                                        point: sensorLocations[index],
-                                        width: 36,
-                                        height: 36,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              selectedSensor = 'Sensor ${index + 1}';
-                                              showBottomSheet = true;
-                                              bottomSheetHeight = 200;
-                                            });
-                                          },
-                                          child: const Icon(
-                                            Icons.location_on,
-                                            color: Colors.indigo,
-                                            size: 36,
-                                          ),
+                              children: [
+                                TileLayer(
+                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                  userAgentPackageName: 'com.example.app',
+                                ),
+                                MarkerLayer(
+                                  markers: sensors.map((sensor) {
+                                    final position = sensor.position.split(',');
+                                    return Marker(
+                                      point: LatLng(
+                                        double.parse(position[0]),
+                                        double.parse(position[1]),
+                                      ),
+                                      width: 36,
+                                      height: 36,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedSensor = sensor.sensorId;
+                                            showBottomSheet = true;
+                                            bottomSheetHeight = 200;
+                                          });
+                                        },
+                                        child: const Icon(
+                                          Icons.location_on,
+                                          color: Colors.indigo,
+                                          size: 36,
                                         ),
                                       ),
+                                    );
+                                  }).toList(),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                           Positioned(
                             top: 16,
                             right: 16,
@@ -200,12 +257,10 @@ class _MapScreenState extends State<MapScreen> {
                                   heroTag: 'zoom_in',
                                   onPressed: () {
                                     final currentZoom = mapController.zoom;
-                                    if (currentZoom < 18) {
-                                      mapController.move(
-                                        mapController.center,
-                                        currentZoom + 1,
-                                      );
-                                    }
+                                    mapController.move(
+                                      mapController.center,
+                                      currentZoom + 1,
+                                    );
                                   },
                                   child: const Icon(Icons.add),
                                 ),
@@ -215,12 +270,10 @@ class _MapScreenState extends State<MapScreen> {
                                   heroTag: 'zoom_out',
                                   onPressed: () {
                                     final currentZoom = mapController.zoom;
-                                    if (currentZoom > 0) {
-                                      mapController.move(
-                                        mapController.center,
-                                        currentZoom - 1,
-                                      );
-                                    }
+                                    mapController.move(
+                                      mapController.center,
+                                      currentZoom - 1,
+                                    );
                                   },
                                   child: const Icon(Icons.remove),
                                 ),
@@ -275,17 +328,37 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                         Text(
-                          selectedSensor,
+                          'Sensor: $selectedSensor',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 16),
+                        if (currentData.isNotEmpty)
+                          Text(
+                            '${selectedParticle.toUpperCase()}: ${currentData.firstWhere(
+                                  (data) => data.sensorId == selectedSensor,
+                                  orElse: () => currentData.first,
+                                ).value} μg/m³',
+                            style: const TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        const SizedBox(height: 8),
                         Text(
-                          '$selectedParticle: ${values[0]} μg/m³',
+                          'Last updated: ${DateFormat('MMM dd, HH:mm').format(
+                            currentData
+                                .firstWhere(
+                                  (data) => data.sensorId == selectedSensor,
+                                  orElse: () => currentData.first,
+                                )
+                                .stamp
+                                .toLocal(),
+                          )}',
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
+                            color: Colors.grey,
                           ),
                         ),
                       ],
