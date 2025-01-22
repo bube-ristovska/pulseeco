@@ -3,7 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'yourdevicescreen.dart';
-
+//hi
 // These constants help us maintain consistent keys for storing settings
 const String kNotificationsKey = 'notifications_enabled';
 const String kLocationKey = 'location_enabled';
