@@ -5,7 +5,6 @@ import 'mapscreen.dart';
 import 'learnscreen.dart';
 import 'rankingscreen.dart';
 import 'settingsscreen.dart';
-import 'cities.dart';
 
 void main() {
   runApp(const MyApp());
@@ -24,11 +23,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => OnboardingScreen(),
         '/home': (context) => AirQualityScreen(),
-        '/mapscreen': (context) =>  MapScreen(),
       },
     );
   }
-
 }
 
 class AirQualityScreen extends StatefulWidget {
@@ -65,7 +62,7 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
         selectedItemColor:  const Color(0xFF1A237E),
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
+        type: BottomNavigationBarType.fixed, // Add this line to show all items
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
