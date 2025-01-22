@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'cities.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -12,6 +14,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   City? selectedCity;
+  bool isNotificationRequested = false;
 
   final List<OnboardingScreenData> screens = [
     OnboardingScreenData(
@@ -40,6 +43,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkNotificationStatus();
+  }
+
+  Future<void> _checkNotificationStatus() async {
+    final status = await Permission.notification.status;
+    setState(() {
+      isNotificationRequested = status.isGranted;
+    });
+  }
+
+  Future<void> _requestNotificationPermission() async {
+    final status = await Permission.notification.request();
+    setState(() {
+      isNotificationRequested = status.isGranted;
+    });
+
+    // Save the notification preference
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', status.isGranted);
+
+    // Proceed to home screen
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+        context,
+        '/home',
+        arguments: selectedCity,
+      );
+    }
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -58,25 +94,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      // Navigate to home screen with selected city
-      if (mounted && selectedCity != null) {
+      // Handle notification permission request
+      await _requestNotificationPermission();
+    }
+  }
+
+  void _handleSecondaryButtonTap() async {
+    // If user clicks "NO, THANKS" on notifications screen
+    if (_currentPage == screens.length - 1) {
+      // Save the user's preference
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notifications_enabled', false);
+
+      // Navigate to home screen
+      if (mounted) {
         Navigator.pushReplacementNamed(
           context,
           '/home',
           arguments: selectedCity,
         );
       }
-    }
-  }
-
-  void _handleSecondaryButtonTap() {
-    if (_currentPage < screens.length - 1) {
+    } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-    } else {
-      Navigator.pushReplacementNamed(context, '/home', arguments: selectedCity);
     }
   }
 
@@ -111,6 +153,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         selectedCity = result;
         _handlePrimaryButtonTap(); // Proceed to next page after selection
       });
+
+      // Save the selected city
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('selected_city', result.name);
+      await prefs.setString('selected_country', result.country);
     }
   }
 
@@ -134,6 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPrimaryButtonTap: _handlePrimaryButtonTap,
                 onSecondaryButtonTap: _handleSecondaryButtonTap,
                 selectedCity: selectedCity,
+                isPermissionGranted: isNotificationRequested && index == 2,
               );
             },
           ),
@@ -163,6 +211,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+// Data class for organizing screen content
 class OnboardingScreenData {
   final String title;
   final String description;
@@ -179,7 +228,7 @@ class OnboardingScreenData {
     required this.primaryButtonText,
     this.secondaryButtonText,
     this.showSecondaryButton = false,
-    this.isChooseCity = false,
+    this.isChooseCity = false
   });
 }
 
@@ -188,6 +237,7 @@ class OnboardingPage extends StatelessWidget {
   final VoidCallback onPrimaryButtonTap;
   final VoidCallback onSecondaryButtonTap;
   final City? selectedCity;
+  final bool isPermissionGranted;
 
   const OnboardingPage({
     Key? key,
@@ -195,6 +245,7 @@ class OnboardingPage extends StatelessWidget {
     required this.onPrimaryButtonTap,
     required this.onSecondaryButtonTap,
     this.selectedCity,
+    this.isPermissionGranted = false,
   }) : super(key: key);
 
   @override
@@ -239,6 +290,18 @@ class OnboardingPage extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (isPermissionGranted) ...[
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Notifications are enabled!',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.green,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
