@@ -1,18 +1,52 @@
+import 'dart:convert';
+
 import 'package:latlong2/latlong.dart';
 //hi
 class City {
   final String name;
   final String country;
-  final String baseUrl;
   final LatLng coordinates;
+  final String baseUrl;
 
-  City({
-    required this.name,
-    required this.country,
-    required this.baseUrl,
-    required this.coordinates,
-  });
+  City({required this.name, required this.country, required this.coordinates, required this.baseUrl});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'country': country,
+      'baseUrl': baseUrl,
+      'lat': coordinates.latitude,
+      'lng': coordinates.longitude,
+    };
+  }
+
+  factory City.fromMap(Map<String, dynamic> map) {
+    return City(
+      name: map['name'],
+      country: map['country'],
+      baseUrl: map['baseUrl'],
+      coordinates: LatLng(map['lat'], map['lng']),
+    );
+  }
+  // Converts a City instance to a JSON string
+  String toJson() => json.encode(toMap());
+
+  // Converts a JSON string to a City instance
+  factory City.fromJson(String source) => City.fromMap(json.decode(source));
 }
+// class City {
+//   final String name;
+//   final String country;
+//   final String baseUrl;
+//   final LatLng coordinates;
+//
+//   City({
+//     required this.name,
+//     required this.country,
+//     required this.baseUrl,
+//     required this.coordinates,
+//   });
+// }
 
 final List<City> cities = [
   // Macedonia Cities

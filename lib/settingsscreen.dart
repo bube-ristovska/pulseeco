@@ -182,6 +182,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Notifications'),
                       subtitle: const Text('Receive updates and alerts'),
                       value: notificationsEnabled,
+                      activeColor: const Color(0xFF1A237E),
                       onChanged: _handleNotificationChange,
                     ),
                     const Divider(),
@@ -189,6 +190,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Current Location'),
                       subtitle: const Text('Allow access to your location'),
                       value: locationEnabled,
+                      activeColor: const Color(0xFF1A237E),
                       onChanged: _handleLocationChange,
                     ),
                     const Divider(),
@@ -196,6 +198,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Only nearest station'),
                       subtitle: const Text('Show data only from closest station'),
                       value: nearestStationOnly,
+                      activeColor: const Color(0xFF1A237E),
                       onChanged: _handleNearestStationChange,
                     ),
                     const Divider(),
@@ -232,8 +235,9 @@ class SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: const Color(0xFF1A237E),
                   padding: const EdgeInsets.all(16),
+
                 ),
                 onPressed: _navigateToYourDevice,
                 child: const Text(

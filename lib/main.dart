@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'onboarding.dart';
 import 'homescreen.dart';
 import 'mapscreen.dart';
@@ -8,6 +11,7 @@ import 'settingsscreen.dart';
 import 'cities.dart';
 //hi
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 

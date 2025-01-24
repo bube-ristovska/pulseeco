@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingScreenData(
       title: 'Choose Your Main City',
       description: 'Select your primary city to monitor air quality and environmental data.',
-      imagePath: 'assets/images/city.jpg',
+      imagePath: 'assets/images/location.png',
       primaryButtonText: 'CHOOSE CITY',
       showSecondaryButton: false,
       isChooseCity: true,
@@ -47,6 +47,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     _checkNotificationStatus();
+    _clearCitiesPrefs();
+  }
+  // Clear cities and update flag
+  void _clearCitiesPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Clear cities
+    await prefs.remove('selectedCities');
+
+    // Update the flag to mark that hot reload has happened
+    await prefs.setBool('isFirstLaunchAfterHotReload', false);
   }
 
   Future<void> _checkNotificationStatus() async {

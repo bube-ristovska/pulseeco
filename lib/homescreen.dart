@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'choosecity.dart';
 import 'cities.dart';
 import 'apicalls.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert'; // Needed to encode/decode city objects
 //hi
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,16 +15,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<City> selectedCities;
-  Map<String, Map<String, dynamic>> airQualityDataMap = {};
-  bool isLoading = false;
-
+  late List<City> selectedCities=[];
   @override
   void initState() {
     super.initState();
-    // Initialize with empty list - will be populated in didChangeDependencies
-    selectedCities = [];
+    // selectedCities = [];
+    _loadCitiesFromPrefs(); // Load saved cities on startup
   }
+
+  Map<String, Map<String, dynamic>> airQualityDataMap = {};
+  bool isLoading = false;
+  void _loadCitiesFromPrefs() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // final cityList = prefs.getStringList('selected_cities');
+    List<String>? cityList=prefs.getStringList('selectedCities');
+
+    if (cityList != null) {
+      setState(() {
+        selectedCities = cityList.map((cityJson) => City.fromMap(jsonDecode(cityJson))).toList();
+      });
+    }
+    await _fetchAllCitiesData();
+  }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // Initialize with empty list - will be populated in didChangeDependencies
+  //   selectedCities = [];
+  // }
+
 
   @override
   void didChangeDependencies() {
@@ -32,7 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mainCity != null && selectedCities.isEmpty) {
       setState(() {
         selectedCities = [mainCity];
+
+
       });
+      _fetchAllCitiesData();
+    }else if (selectedCities.isNotEmpty && airQualityDataMap.isEmpty) {
+      // Fetch data if cities are loaded but no data exists
       _fetchAllCitiesData();
     }
   }
@@ -51,11 +78,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _fetchCityData(City city) async {
+  void _saveCitiesToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cityList = selectedCities.map((city) => jsonEncode(city.toMap())).toList();
+    await prefs.setStringList('selectedCities', cityList);
+  }
+
+  Future<void> _fetchCityData(City city) async { // Changed to Future<void>
     try {
       final data = await fetchAirQualityData(city.name);
       setState(() {
         airQualityDataMap[city.name] = data!;
+        _saveCitiesToPrefs(); // Save updated list
       });
     } catch (e) {
       print('Error fetching data for ${city.name}: $e');
@@ -63,14 +97,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _removeCity(City city) {
-    // Don't allow removing the main city (first city)
     if (selectedCities.indexOf(city) == 0) return;
-
     setState(() {
       selectedCities.remove(city);
       airQualityDataMap.remove(city.name);
+      _saveCitiesToPrefs(); // Save updated list
     });
   }
+  // Future<void> _fetchCityData(City city) async {
+  //   try {
+  //     final data = await fetchAirQualityData(city.name);
+  //     setState(() {
+  //       airQualityDataMap[city.name] = data!;
+  //     });
+  //   } catch (e) {
+  //     print('Error fetching data for ${city.name}: $e');
+  //   }
+  // }
+  //
+  // void _removeCity(City city) {
+  //   // Don't allow removing the main city (first city)
+  //   if (selectedCities.indexOf(city) == 0) return;
+  //
+  //   setState(() {
+  //     selectedCities.remove(city);
+  //     airQualityDataMap.remove(city.name);
+  //   });
+  // }
 
   Widget _buildAirQualityInfo(Map<String, dynamic> data) {
     final values = data['values'] as Map<String, dynamic>;
@@ -203,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.pushNamed(
                           context,
                           '/mapscreen',
-                          arguments: selectedCities,
+                          arguments: selectedCities.first,
                         );
                       },
                       style: TextButton.styleFrom(
