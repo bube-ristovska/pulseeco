@@ -116,6 +116,43 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       );
     }
   }
+  Color getMarkerColor(String particleType, double value) {
+    switch (particleType) {
+      case 'pm10':
+        if (value <= 50) return Colors.green;
+        if (value <= 100) return Colors.yellow;
+        return Colors.red;
+
+      case 'pm25':
+        if (value <= 25) return Colors.green;
+        if (value <= 50) return Colors.yellow;
+        return Colors.red;
+
+      case 'no2':
+        if (value <= 40) return Colors.green;
+        if (value <= 100) return Colors.yellow;
+        return Colors.red;
+
+      case 'o3':
+        if (value <= 60) return Colors.green;
+        if (value <= 120) return Colors.yellow;
+        return Colors.red;
+
+      case 'co':
+        if (value <= 4.4) return Colors.green;
+        if (value <= 9.4) return Colors.yellow;
+        return Colors.red;
+
+      case 'noise':
+        if (value <= 45) return Colors.green;
+        if (value <= 70) return Colors.yellow;
+        return Colors.red;
+
+      default:
+        return Colors.grey;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -264,11 +301,23 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                                 ),
                                 MarkerLayer(
                                   markers: sensors.map((sensor) {
-                                    final position = sensor.position.split(',');
+                                    final List<String> positionParts = sensor.position.split(',');
+
+                                    final sensorData = currentData.firstWhere(
+                                          (data) => data.sensorId == sensor.sensorId && data.type == selectedParticle,
+                                      orElse: () => SensorData(
+                                          sensorId: sensor.sensorId,
+                                          position: sensor.position,
+                                          type: selectedParticle,
+                                          value: '0',
+                                          stamp: DateTime.now()
+                                      ),
+                                    );
+
                                     return Marker(
                                       point: LatLng(
-                                        double.parse(position[0]),
-                                        double.parse(position[1]),
+                                          double.parse(positionParts[0].trim()),
+                                          double.parse(positionParts[1].trim())
                                       ),
                                       width: 36,
                                       height: 36,
@@ -280,9 +329,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                                             bottomSheetHeight = 200;
                                           });
                                         },
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.location_on,
-                                          color: Colors.indigo,
+                                          color: getMarkerColor(selectedParticle, double.parse(sensorData.value)),
                                           size: 36,
                                         ),
                                       ),

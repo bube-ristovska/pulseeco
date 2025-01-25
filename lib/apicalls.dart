@@ -25,6 +25,8 @@ Future<Map<String, dynamic>?> fetchAirQualityData(String cityName) async {
 
 
 
+
+
 class SensorData {
   final String sensorId;
   final String position;
@@ -150,4 +152,48 @@ class ApiService {
 
     return dailyAverages;
   }
+
+
+  // ranking
+  static Future<List<Map<String, dynamic>>> fetchPollutionRanking() async {
+    List<Map<String, dynamic>> rankings = [];
+
+    for (var city in cities) {
+      try {
+        final now = DateTime.now();
+        final weekAgo = now.subtract(const Duration(days: 7));
+
+        final data = await getCurrentData(city);
+
+        if (data.isNotEmpty) {
+          final values = data
+              .map((reading) => double.tryParse(reading.value) ?? 0.0)
+              .where((value) => value > 0)
+              .toList();
+
+          if (values.isNotEmpty) {
+            final avgPM10 = values.reduce((a, b) => a + b) / values.length;
+
+            rankings.add({
+              'rank': 0,
+              'country': city.name,
+              'value': avgPM10.toStringAsFixed(2)
+            });
+          }
+        }
+      } catch (e) {
+        print('Error for ${city.name}: $e');
+      }
+    }
+
+    // Sort and rank
+    rankings.sort((a, b) => double.parse(b['value']).compareTo(double.parse(a['value'])));
+    for (int i = 0; i < rankings.length; i++) {
+      rankings[i]['rank'] = i + 1;
+    }
+
+    return rankings;
+  }
 }
+
+
