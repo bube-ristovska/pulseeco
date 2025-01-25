@@ -76,14 +76,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   Future<void> loadData() async {
     if (selectedCity == null) return;
 
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+      // Reset bottom sheet states
+      showBottomSheet = false;
+      selectedSensor = '';
+      bottomSheetHeight = 0;
+    });
+
     try {
       final sensorsData = await ApiService.getSensors(selectedCity!);
       final currentSensorData = await ApiService.getCurrentData(selectedCity!);
-      final weeklyDataResult = await ApiService.getWeeklyData(
-          selectedCity!, selectedParticle);
+      final weeklyDataResult = await ApiService.getWeeklyData(selectedCity!, selectedParticle);
 
-      if (!mounted) return; // Avoid calling setState if the widget is disposed
+      if (!mounted) return;
 
       setState(() {
         sensors = sensorsData;
@@ -93,22 +99,21 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       });
 
       if (sensors.isNotEmpty) {
-        try{
-        final firstSensor = sensors[0];
-        final position = firstSensor.position.split(',');
-        if (!mounted) return; // Avoid mapController move if widget is disposed
+        try {
+          final firstSensor = sensors[0];
+          final position = firstSensor.position.split(',');
+          if (!mounted) return;
 
-        mapController.move(
-          LatLng(double.parse(position[0]), double.parse(position[1])),
-          13.0,
-        );}
-            catch(e){
-              print('Map controller initialization error:$e');
-            }
-
+          mapController.move(
+            LatLng(double.parse(position[0]), double.parse(position[1])),
+            13.0,
+          );
+        } catch (e) {
+          print('Map controller initialization error: $e');
+        }
       }
     } catch (e) {
-      if (!mounted) return; // Avoid calling setState if the widget is disposed
+      if (!mounted) return;
 
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,6 +121,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       );
     }
   }
+
   Color getMarkerColor(String particleType, double value) {
     switch (particleType) {
       case 'pm10':
