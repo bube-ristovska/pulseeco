@@ -6,7 +6,7 @@ import 'cities.dart';
 import 'apicalls.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // Needed to encode/decode city objects
-//hi
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,42 +15,55 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<City> selectedCities=[];
+  List<Sensor> sensors = [];
+  String selectedParticle = 'pm10';
+
+  late List<City> selectedCities = [];
+  final ScrollController _scrollController = ScrollController();
+  double _mapHeight = 200.0; // Initial map height
+
   @override
   void initState() {
     super.initState();
     _loadCitiesFromPrefs(); // Load saved cities on startup
+    _scrollController.addListener(_scrollListener); // Listen to scroll changes
+  }
+
+  void _scrollListener() {
+    final offset = _scrollController.offset;
+    setState(() {
+      // Reduce map height based on scroll position
+      _mapHeight = 200.0 - offset.clamp(0.0, 150.0); // Minimum height 50, max reduction 150
+    });
   }
 
   Map<String, Map<String, dynamic>> airQualityDataMap = {};
   bool isLoading = false;
+
   void _loadCitiesFromPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? cityList=prefs.getStringList('selectedCities');
+    List<String>? cityList = prefs.getStringList('selectedCities');
 
     if (cityList != null) {
       setState(() {
-        selectedCities = cityList.map((cityJson) => City.fromMap(jsonDecode(cityJson))).toList();
+        selectedCities = cityList
+            .map((cityJson) => City.fromMap(jsonDecode(cityJson)))
+            .toList();
       });
     }
     await _fetchAllCitiesData();
   }
 
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Get the main city from route arguments
     final mainCity = ModalRoute.of(context)?.settings.arguments as City?;
     if (mainCity != null && selectedCities.isEmpty) {
       setState(() {
         selectedCities = [mainCity];
-
-
       });
       _fetchAllCitiesData();
-    }else if (selectedCities.isNotEmpty && airQualityDataMap.isEmpty) {
-      // Fetch data if cities are loaded but no data exists
+    } else if (selectedCities.isNotEmpty && airQualityDataMap.isEmpty) {
       _fetchAllCitiesData();
     }
   }
@@ -75,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setStringList('selectedCities', cityList);
   }
 
-  Future<void> _fetchCityData(City city) async { // Changed to Future<void>
+  Future<void> _fetchCityData(City city) async {
     try {
       final data = await fetchAirQualityData(city.name);
       setState(() {
@@ -173,8 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
 
               // Main city map
-              Container(
-                height: 200,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: _mapHeight,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
@@ -216,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // Add this new Row widget
+              // This button should be outside the map, in a fixed position
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Row(
@@ -264,90 +278,102 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Cities list
               Expanded(
-                child: ListView.builder(
-                  itemCount: selectedCities.length,
-                  itemBuilder: (context, index) {
-                    final city = selectedCities[index];
-                    final cityData = airQualityDataMap[city.name];
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scrollNotification) {
+                    if (scrollNotification is ScrollUpdateNotification) {
+                      setState(() {
+                        // Adjust map height based on scroll position
+                        _mapHeight = (200.0 - scrollNotification.metrics.pixels).clamp(0.0, 200.0);
+                      });
+                    }
+                    return true;
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: selectedCities.length,
+                    itemBuilder: (context, index) {
+                      final city = selectedCities[index];
+                      final cityData = airQualityDataMap[city.name];
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1A237E),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            city.name,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          if (index == 0)
-                                            const Padding(
-                                              padding: EdgeInsets.only(left: 8.0),
-                                              child: Icon(
-                                                Icons.star,
-                                                color: Colors.yellow,
-                                                size: 20,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A237E),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              city.name,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
-                                        ],
-                                      ),
-                                      Text(
-                                        city.country,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
+                                            if (index == 0)
+                                              const Padding(
+                                                padding: EdgeInsets.only(left: 8.0),
+                                                child: Icon(
+                                                  Icons.star,
+                                                  color: Colors.yellow,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (index > 0) // Only show delete for additional cities
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      color: Colors.white70,
+                                        Text(
+                                          city.country,
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    onPressed: () => _removeCity(city),
                                   ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            if (isLoading)
-                              const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                ),
-                              )
-                            else if (cityData != null)
-                              _buildAirQualityInfo(cityData)
-                            else
-                              const Text(
-                                'No data available',
-                                style: TextStyle(color: Colors.white70),
+                                  if (index > 0) // Only show delete for additional cities
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.white70,
+                                      ),
+                                      onPressed: () => _removeCity(city),
+                                    ),
+                                ],
                               ),
-                          ],
+                              const SizedBox(height: 16),
+                              if (isLoading)
+                                const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                                )
+                              else if (cityData != null)
+                                _buildAirQualityInfo(cityData)
+                              else
+                                const Text(
+                                  'No data available',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

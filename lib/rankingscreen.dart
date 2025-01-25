@@ -22,7 +22,11 @@ class _RankingScreenState extends State<RankingScreen> {
 
   Future<void> _fetchRankings() async {
     try {
-      setState(() => isLoading = true);
+      setState(() {
+        isLoading = true;  // Show loading indicator
+        errorMessage = null;  // Clear any previous error message
+      });
+
       final rankings = await ApiService.fetchPollutionRanking();
 
       setState(() {
@@ -117,7 +121,7 @@ class _RankingScreenState extends State<RankingScreen> {
           width: isCenter ? 120 : 100,
           height: isCenter ? 120 : 100,
           decoration: BoxDecoration(
-            color: const Color(0xFF3A36DB),
+            color: const Color(0xFF1A237E),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -128,16 +132,24 @@ class _RankingScreenState extends State<RankingScreen> {
             ],
           ),
           child: Center(
-            child: Text(
-              city['value'],
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            child: RichText(
+              text: TextSpan(
+                text: city['value'],
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                children: const <TextSpan> [
+                  TextSpan(
+                    text: '\nµg/m³',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+
+                  )
+                ],
               ),
+              textAlign: TextAlign.center,
+            )
+              ,
             ),
           ),
-        ),
+
         Padding(
           padding: const EdgeInsets.only(top: 8.0),
           child: Text(
@@ -175,7 +187,7 @@ class _RankingScreenState extends State<RankingScreen> {
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         trailing: Text(
-          city['value'],
+          '${city['value']} µg/m³',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
