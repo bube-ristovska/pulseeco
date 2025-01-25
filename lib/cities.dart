@@ -34,19 +34,7 @@ class City {
   // Converts a JSON string to a City instance
   factory City.fromJson(String source) => City.fromMap(json.decode(source));
 }
-// class City {
-//   final String name;
-//   final String country;
-//   final String baseUrl;
-//   final LatLng coordinates;
-//
-//   City({
-//     required this.name,
-//     required this.country,
-//     required this.baseUrl,
-//     required this.coordinates,
-//   });
-// }
+
 
 final List<City> cities = [
   // Macedonia Cities

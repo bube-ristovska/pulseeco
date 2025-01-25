@@ -19,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // selectedCities = [];
     _loadCitiesFromPrefs(); // Load saved cities on startup
   }
 
@@ -27,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = false;
   void _loadCitiesFromPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    // final cityList = prefs.getStringList('selected_cities');
     List<String>? cityList=prefs.getStringList('selectedCities');
 
     if (cityList != null) {
@@ -37,13 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     await _fetchAllCitiesData();
   }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   // Initialize with empty list - will be populated in didChangeDependencies
-  //   selectedCities = [];
-  // }
 
 
   @override
@@ -104,26 +95,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _saveCitiesToPrefs(); // Save updated list
     });
   }
-  // Future<void> _fetchCityData(City city) async {
-  //   try {
-  //     final data = await fetchAirQualityData(city.name);
-  //     setState(() {
-  //       airQualityDataMap[city.name] = data!;
-  //     });
-  //   } catch (e) {
-  //     print('Error fetching data for ${city.name}: $e');
-  //   }
-  // }
-  //
-  // void _removeCity(City city) {
-  //   // Don't allow removing the main city (first city)
-  //   if (selectedCities.indexOf(city) == 0) return;
-  //
-  //   setState(() {
-  //     selectedCities.remove(city);
-  //     airQualityDataMap.remove(city.name);
-  //   });
-  // }
 
   Widget _buildAirQualityInfo(Map<String, dynamic> data) {
     final values = data['values'] as Map<String, dynamic>;
