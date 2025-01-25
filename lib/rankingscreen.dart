@@ -34,8 +34,10 @@ class _RankingScreenState extends State<RankingScreen> {
         errorMessage = 'Failed to load rankings. Please check your connection.';
         isLoading = false;
       });
+      print('Error fetching rankings: $e');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
