@@ -47,7 +47,7 @@ class _AirQualityScreenState extends State<AirQualityScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const MapScreen(),
+    const MapScreen(isFromMenu: true),
     const LearnScreen(),
     const RankingScreen(),
     const SettingsScreen(),

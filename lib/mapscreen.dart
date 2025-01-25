@@ -7,7 +7,8 @@ import 'apicalls.dart';
 import 'cities.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
+  final bool isFromMenu;
+  const MapScreen({Key? key, this.isFromMenu = false}) : super(key: key);
 
   @override
   _MapScreenState createState() => _MapScreenState();
@@ -130,10 +131,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
+                      if (!widget.isFromMenu)
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.of(context).pop(),
+                        )
+                      else const  SizedBox(width: 48),
                       // City Selection Dropdown
                       if (selectedCities.isNotEmpty)
                         DropdownButton<City>(
