@@ -310,7 +310,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                                           position: sensor.position,
                                           type: selectedParticle,
                                           value: '0',
-                                          stamp: DateTime.now()
+                                          stamp: DateTime.now(),
+                                          description: sensor.description
                                       ),
                                     );
 
@@ -421,7 +422,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           ),
                         ),
                         Text(
-                          'Sensor: $selectedSensor',
+                          'Sensor: ${sensors.firstWhere((s) => s.sensorId == selectedSensor).description}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

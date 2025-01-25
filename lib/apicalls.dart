@@ -33,6 +33,7 @@ class SensorData {
   final String type;
   final String value;
   final DateTime stamp;
+  final String description;
 
   SensorData({
     required this.sensorId,
@@ -40,6 +41,7 @@ class SensorData {
     required this.type,
     required this.value,
     required this.stamp,
+    required this.description
   });
 
   factory SensorData.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class SensorData {
       type: json['type'] ?? '',
       value: json['value']?.toString() ?? '0',
       stamp: DateTime.parse(json['stamp']),
+      description: json['description'] ?? 'test'
     );
   }
 }
