@@ -12,6 +12,18 @@ class LearnScreen extends StatelessWidget {
   }
 
   Widget _buildLearnCard(String title, String subtitle, String url) {
+    final Map<String, IconData> iconMap = {
+      'What is Air Quality?': Icons.info_outline,
+      'Air Quality Index': Icons.analytics_outlined,
+      'Health Impact': Icons.medical_services_outlined,
+      'Prevention': Icons.shield_outlined,
+      'Take Action': Icons.eco_outlined,
+      'Sources of Air Pollution': Icons.factory_outlined,
+      'Indoor Air Quality': Icons.home_outlined,
+      'Climate Change': Icons.cloud_outlined,
+      'Children and Air Pollution': Icons.child_care_outlined,
+      'Monitoring Air Quality': Icons.settings_input_antenna,
+    };
     return Card(
       margin: const EdgeInsets.only(bottom: 26, left: 13, right: 13),
       color: const Color(0xFF1A237E),
@@ -31,8 +43,8 @@ class LearnScreen extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.article,
+                  child:  Icon(
+                    iconMap[title] ?? Icons.article,
                     color: Color(0xFF1A237E),
                     size: 32,  // Increased icon size
                   ),
@@ -86,14 +98,14 @@ class LearnScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color:  Color(0xFF1A237E),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             // GridView inside the scrollable column
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 13.0),
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
               child: GridView.builder(
                 shrinkWrap: true,  // This makes the GridView take up only as much space as needed
                 physics: const NeverScrollableScrollPhysics(),  // Disable scroll on the GridView itself
@@ -101,7 +113,7 @@ class LearnScreen extends StatelessWidget {
                   crossAxisCount: 2, // Two columns
                   crossAxisSpacing: 4.0, // Spacing between columns
                   mainAxisSpacing: 4.0, // Spacing between rows
-                  childAspectRatio: 0.7, // Adjusted the aspect ratio for a taller card
+                  childAspectRatio: 0.8, // Adjusted the aspect ratio for a taller card
                 ),
                 itemCount: 10, // Number of items in the grid
                 itemBuilder: (context, index) {
