@@ -16,6 +16,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
   City? selectedCity;
   bool isNotificationRequested = false;
+  bool isFirstLaunch = false;
 
   final List<OnboardingScreenData> screens = [
     OnboardingScreenData(
@@ -48,7 +49,55 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.initState();
     _checkNotificationStatus();
     _clearCitiesPrefs();
+    _checkFirstLaunchAndCity();
   }
+
+// Comprehensive method to check first launch and city selection
+  Future<void> _checkFirstLaunchAndCity() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Check if this is the first launch
+    bool? firstLaunch = prefs.getBool('isFirstLaunch');
+
+    // Attempt to load previously selected city
+    String? savedCityName = prefs.getString('selected_city');
+    String? savedCountryName = prefs.getString('selected_country');
+
+    // Determine if we need to show onboarding
+    if (firstLaunch == null || firstLaunch == true ||
+        savedCityName == null || savedCountryName == null) {
+      // First launch or no city selected
+      setState(() {
+        isFirstLaunch = true;
+      });
+
+      // Mark that the first launch has been handled
+      await prefs.setBool('isFirstLaunch', false);
+    } else {
+      // Find the saved city in the cities list
+      try {
+        selectedCity = cities.firstWhere(
+                (city) => city.name == savedCityName && city.country == savedCountryName
+        );
+      } catch (e) {
+        // If saved city is not found in the list, treat as first launch
+        setState(() {
+          isFirstLaunch = true;
+        });
+        return;
+      }
+
+      // Navigate to home if city is selected and it's not first launch
+      if (mounted) {
+        Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: selectedCity
+        );
+      }
+    }
+  }
+
   // Clear cities and update flag
   void _clearCitiesPrefs() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -77,6 +126,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', status.isGranted);
 
+    if (selectedCity != null) {
+      await prefs.setString('selected_city', selectedCity!.name);
+      await prefs.setString('selected_country', selectedCity!.country);
+    }
     // Proceed to home screen
     if (mounted) {
       Navigator.pushReplacementNamed(
@@ -173,8 +226,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
+    // Only build the onboarding screen if it's the first launch
+    if (!isFirstLaunch) {
+      return const SizedBox.shrink(); // Return an empty widget if not first launch
+    }
     return Scaffold(
       backgroundColor: const Color(0xFF322E99),
       body: Stack(
