@@ -113,7 +113,7 @@ class LearnScreen extends StatelessWidget {
                   crossAxisCount: 2, // Two columns
                   crossAxisSpacing: 4.0, // Spacing between columns
                   mainAxisSpacing: 4.0, // Spacing between rows
-                  childAspectRatio: 0.8, // Adjusted the aspect ratio for a taller card
+                  childAspectRatio: 0.7, // Adjusted the aspect ratio for a taller card
                 ),
                 itemCount: 10, // Number of items in the grid
                 itemBuilder: (context, index) {

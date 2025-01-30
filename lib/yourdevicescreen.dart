@@ -118,7 +118,7 @@ class YourDeviceScreenState extends State<YourDeviceScreen> {
               const SizedBox(height: 16),
               _buildChecklistItem(
                 0,
-                'Get a suitable device for the pulse.eco network',
+                'Get a suitable  device for the pulse.eco network',
               ),
               _buildChecklistItem(
                 1,
